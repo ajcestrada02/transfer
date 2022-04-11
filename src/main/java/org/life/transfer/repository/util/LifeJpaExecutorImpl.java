@@ -29,27 +29,31 @@ public class LifeJpaExecutorImpl <T, ID extends Serializable> extends SimpleJpaR
 	}
 
 	@Override
-	public <R> Optional<R> findOne(Specification<T> spec, Class<R> projectionClass) {
-		
-		return null;
+	public <R> Optional<R> findOne(Specification<T> spec, Class<R> projectionType) {
+		TypedQuery<T> query = getQuery(spec, Sort.unsorted());
+        try {
+            T result = query.getSingleResult();
+            return Optional.ofNullable(projectionFactory.createProjection(projectionType, result));
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
 	}
 
 	@Override
-	public <R> Optional<R> findOne(Specification<T> spec, Class<R> projectionClass, String namedEntityGraph,
+	public <R> Optional<R> findOne(Specification<T> spec, Class<R> projectionType, String namedEntityGraph,
 			EntityGraphType type) {
-//		TypedQuery<T> query = getQuery(spec, Sort.unsorted());
-//        EntityGraph<?> entityGraph = this.entityManager.getEntityGraph(namedEntityGraph);
+		TypedQuery<T> query = getQuery(spec, Sort.unsorted());
+        EntityGraph<?> entityGraph = this.entityManager.getEntityGraph(namedEntityGraph);
 //        if (entityGraph == null) {
 //            throw new LifeJpaException(LifeJpaException.ExceptionNames.NAME_ENTITY_GRAPH_NOT_FOUND, BaseUtils.toJson(entityGraph, true));
 //        }
-//        query.setHint(type.getKey(), entityGraph);
-//        try {
-//            T result = query.getSingleResult();
-//            return Optional.ofNullable(projectionFactory.createProjection(projectionType, result));
-//        } catch (NoResultException e) {
-//            return Optional.empty();
-//        }
-		return null;
+        query.setHint(type.getKey(), entityGraph);
+        try {
+            T result = query.getSingleResult();
+            return Optional.ofNullable(projectionFactory.createProjection(projectionType, result));
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
 	}
 
 	@Override
@@ -59,10 +63,20 @@ public class LifeJpaExecutorImpl <T, ID extends Serializable> extends SimpleJpaR
 	}
 
 	@Override
-	public <R> Page<R> findAll(Specification<T> spec, Class<R> projectionClass, String namedEntityGraph,
+	public <R> Page<R> findAll(Specification<T> spec, Class<R> projectionType, String namedEntityGraph,
 			EntityGraphType type, Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
+		TypedQuery<T> query = getQuery(spec, Sort.unsorted());
+        EntityGraph<?> entityGraph = this.entityManager.getEntityGraph(namedEntityGraph);
+        if (entityGraph == null) {
+            throw new LifeJpaException(LifeJpaException.ExceptionNames.NAME_ENTITY_GRAPH_NOT_FOUND, BaseUtils.toJson(entityGraph, true));
+        }
+        query.setHint(type.getKey(), entityGraph);
+        try {
+            T result = query.getSingleResult();
+            return Optional.ofNullable(projectionFactory.createProjection(projectionType, result));
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
 	}
 
 	@Override
